@@ -194,11 +194,11 @@
     switch (buttonIndex) {
         case 0:
             [self clearDraft];
-            [self dismissViewControllerAnimated:YES completion:nil];
+            [self dismissUserVoiceWithoutFlush:YES];
             break;
         case 1:
             [self saveDraft];
-            [self dismissViewControllerAnimated:YES completion:nil];
+            [self dismissUserVoiceWithoutFlush:YES];
             break;
         default:
             [_fieldsView.textView becomeFirstResponder];
@@ -234,7 +234,7 @@
 
 - (void)dismiss {
     if ([self shouldLeaveViewController])
-        [self dismissViewControllerAnimated:YES completion:nil];
+        [self dismissUserVoiceWithoutFlush:YES];
 }
 
 @end
