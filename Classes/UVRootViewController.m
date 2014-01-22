@@ -47,9 +47,11 @@
             next = [UVWelcomeViewController new];
         else if ([_viewToLoad isEqualToString:@"suggestions"])
             next = [UVSuggestionListViewController new];
-        else if ([_viewToLoad isEqualToString:@"new_suggestion"])
-            next = [UVPostIdeaViewController new];
-        else if ([_viewToLoad isEqualToString:@"new_ticket"])
+        else if ([_viewToLoad isEqualToString:@"new_suggestion"]) {
+            UVPostIdeaViewController *postIdeaController = [UVPostIdeaViewController new];
+            postIdeaController.initialText = _payload;
+            next = postIdeaController;
+        } else if ([_viewToLoad isEqualToString:@"new_ticket"])
             next = [UVContactViewController new];
 
         next.firstController = YES;

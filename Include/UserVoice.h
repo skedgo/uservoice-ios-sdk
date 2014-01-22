@@ -12,7 +12,7 @@
 #import "UVConfig.h"
 #import "UVStyleSheet.h"
 
-@interface UserVoice : NSObject 
+@interface UserVoice : NSObject
 
 // Initialize UserVoice with a config
 // This should be called on app launch so that UserVoice can provide accurate
@@ -27,6 +27,8 @@
 
 // Modally present the UserVoice new idea form
 + (void)presentUserVoiceNewIdeaFormForParentViewController:(UIViewController *)parentViewController;
+
++ (void)presentUserVoiceNewIdeaFormForParentViewController:(UIViewController *)parentViewController withInitialText:(NSString *)text;
 
 // Modally present the UserVoice forum view
 + (void)presentUserVoiceForumForParentViewController:(UIViewController *)parentViewController;
