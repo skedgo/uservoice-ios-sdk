@@ -40,8 +40,11 @@
 
     _fieldsView = [UVTextWithFieldsView new];
     _titleField = [_fieldsView addFieldWithLabel:NSLocalizedStringFromTable(@"Title", @"UserVoice", nil)];
-    if (_initialText) {
-        _titleField.text = _initialText;
+    if (_initialTitle) {
+        _titleField.text = _initialTitle;
+    }
+    if (_initialDescription) {
+        _fieldsView.textView.text = _initialDescription;
     }
     [[NSNotificationCenter defaultCenter] addObserverForName:UITextFieldTextDidChangeNotification object:_titleField queue:nil usingBlock:^(NSNotification *note) {
         _instantAnswerManager.searchText = _titleField.text;

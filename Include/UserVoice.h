@@ -28,7 +28,7 @@
 // Modally present the UserVoice new idea form
 + (void)presentUserVoiceNewIdeaFormForParentViewController:(UIViewController *)parentViewController;
 
-+ (void)presentUserVoiceNewIdeaFormForParentViewController:(UIViewController *)parentViewController withInitialText:(NSString *)text;
++ (void)presentUserVoiceNewIdeaFormForParentViewController:(UIViewController *)parentViewController withInitialTitle:(NSString *)title withInitialDescription:(NSString *)description;
 
 // Modally present the UserVoice forum view
 + (void)presentUserVoiceForumForParentViewController:(UIViewController *)parentViewController;

@@ -16,6 +16,7 @@
 @property (nonatomic, retain) NSString *viewToLoad;
 @property (nonatomic, retain) UVInitialLoadManager *loader;
 @property (nonatomic, copy) NSString *payload;
+@property (nonatomic, copy) NSString *payloadSecondary;
 
 - (id)initWithViewToLoad:(NSString *)theViewToLoad;
 

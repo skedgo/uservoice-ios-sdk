@@ -18,7 +18,8 @@
     NSInteger _selectedCategoryId;
 }
 
-@property (nonatomic, retain) NSString *initialText;
+@property (nonatomic, retain) NSString *initialTitle;
+@property (nonatomic, retain) NSString *initialDescription;
 @property (nonatomic, retain) UVInstantAnswerManager *instantAnswerManager;
 @property (nonatomic, retain) UITextField *titleField;
 @property (nonatomic, retain) NSLayoutConstraint *keyboardConstraint;

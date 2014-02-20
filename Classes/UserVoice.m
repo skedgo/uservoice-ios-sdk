@@ -91,9 +91,12 @@
     [self presentUserVoiceNewIdeaFormForParentViewController:parentViewController andConfig:nil];
 }
 
-+ (void)presentUserVoiceNewIdeaFormForParentViewController:(UIViewController *)parentViewController withInitialText:(NSString *)text {
++ (void)presentUserVoiceNewIdeaFormForParentViewController:(UIViewController *)parentViewController
+                                          withInitialTitle:(NSString *)title
+                                    withInitialDescription:(NSString *)description {
     UVRootViewController *viewController = [[UVRootViewController alloc] initWithViewToLoad:@"new_suggestion"];
     viewController.payload = text;
+    viewController.payloadSecondary = description;
     [self presentUserVoiceController:viewController forParentViewController:parentViewController];
 }
 
