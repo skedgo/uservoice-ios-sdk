@@ -95,7 +95,7 @@
                                           withInitialTitle:(NSString *)title
                                     withInitialDescription:(NSString *)description {
     UVRootViewController *viewController = [[UVRootViewController alloc] initWithViewToLoad:@"new_suggestion"];
-    viewController.payload = text;
+    viewController.payload = title;
     viewController.payloadSecondary = description;
     [self presentUserVoiceController:viewController forParentViewController:parentViewController];
 }
