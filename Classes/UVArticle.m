@@ -17,9 +17,9 @@
 
 @implementation UVArticle
 
-+ (id)getArticlesWithTopicId:(NSInteger)topicId page:(NSInteger)page delegate:(id)delegate {
-    NSString *path = [self apiPath:[NSString stringWithFormat:@"/topics/%d/articles.json", topicId]];
-    NSDictionary *params = @{ @"sort" : @"ordered", @"page" : [NSString stringWithFormat:@"%d", page] };
++ (id)getArticlesWithTopicId:(NSInteger)topicId page:(NSInteger)page delegate:(id<UVModelDelegate>)delegate {
+    NSString *path = [self apiPath:[NSString stringWithFormat:@"/topics/%d/articles.json", (int)topicId]];
+    NSDictionary *params = @{ @"sort" : @"ordered", @"page" : [NSString stringWithFormat:@"%d", (int)page] };
     return [self getPath:path
               withParams:params
                   target:delegate
@@ -27,9 +27,9 @@
                  rootKey:@"articles"];
 }
 
-+ (id)getArticlesWithPage:(NSInteger)page delegate:(id)delegate {
++ (id)getArticlesWithPage:(NSInteger)page delegate:(id<UVModelDelegate>)delegate {
     NSString *path = [self apiPath:@"/articles.json"];
-    NSDictionary *params = @{ @"sort" : @"ordered", @"page" : [NSString stringWithFormat:@"%d", page] };
+    NSDictionary *params = @{ @"sort" : @"ordered", @"page" : [NSString stringWithFormat:@"%d", (int)page] };
     return [self getPath:path
               withParams:params
                   target:delegate
@@ -37,7 +37,7 @@
                  rootKey:@"articles"];
 }
 
-+ (NSArray *)getInstantAnswers:(NSString *)query delegate:(id)delegate {
++ (NSArray *)getInstantAnswers:(NSString *)query delegate:(id<UVModelDelegate>)delegate {
     NSMutableDictionary *params = [NSMutableDictionary dictionaryWithDictionary:@{
         @"per_page" : @"3",
         @"forum_id" : [NSString stringWithFormat:@"%d", (int)[UVSession currentSession].forum.forumId],
@@ -66,7 +66,7 @@
         _answerHTML = [self objectOrNilForDict:dict key:@"formatted_text"];
         _articleId = [(NSNumber *)[self objectOrNilForDict:dict key:@"id"] integerValue];
         _topicName = [UVUtils decodeHTMLEntities:[[self objectOrNilForDict:dict key:@"topic"] objectForKey:@"name"]];
-        _weight = [(NSNumber *)[self objectOrNilForDict:dict key:@"weight"] integerValue];
+        _weight = [(NSNumber *)[self objectOrNilForDict:dict key:@"normalized_weight"] integerValue];
     }
     return self;
 }

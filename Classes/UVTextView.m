@@ -18,6 +18,7 @@
     if ((self = [super initWithFrame:frame])) {
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(textChanged:) name:UITextViewTextDidChangeNotification object:self];
         
+        self.contentSize = CGSizeMake(0, 20);
         self.font = [UIFont systemFontOfSize:15];
         _placeholderLabel = [UILabel new];
         _placeholderLabel.font = self.font;
@@ -28,6 +29,7 @@
 }
 
 - (void)layoutSubviews {
+    [super layoutSubviews];
     if (!_constraintsAdded && _placeholderLabel.superview) {
         [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-8-[placeholder]" options:0 metrics:nil views:@{@"placeholder":_placeholderLabel}]];
         [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:(IOS7 ? @"|-4-[placeholder]" : @"|-8-[placeholder]") options:0 metrics:nil views:@{@"placeholder":_placeholderLabel}]];
