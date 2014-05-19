@@ -41,8 +41,8 @@
 
     _fieldsView = [UVTextWithFieldsView new];
     _titleField = [_fieldsView addFieldWithLabel:NSLocalizedStringFromTableInBundle(@"Title", @"UserVoice", [UserVoice bundle], nil)];
-    if (_initialText) {
-        _titleField.text = _initialText;
+    if (_initialTitle) {
+        _titleField.text = _initialTitle;
     }
     if (_initialDescription) {
         _fieldsView.textView.text = _initialDescription;
