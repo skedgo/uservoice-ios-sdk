@@ -36,11 +36,11 @@
         [[UVImageCache sharedInstance] flush];
         [[UVSession currentSession] clear];
     }
-    if (_firstController && [[UserVoice delegate] respondsToSelector:@selector(userVoiceRequestsDismissal)]) {
+    if ([[UserVoice delegate] respondsToSelector:@selector(userVoiceRequestsDismissal)]) {
         [[UserVoice delegate] userVoiceRequestsDismissal];
     } else {
         [self dismissViewControllerAnimated:YES completion:nil];
-        if (_firstController && [[UserVoice delegate] respondsToSelector:@selector(userVoiceWasDismissed)]) {
+        if ([[UserVoice delegate] respondsToSelector:@selector(userVoiceWasDismissed)]) {
             [[UserVoice delegate] userVoiceWasDismissed];
         }
     }
