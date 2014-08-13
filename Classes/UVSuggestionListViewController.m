@@ -71,7 +71,7 @@
     _searchResults = theSuggestions;
     NSMutableArray *ids = [NSMutableArray arrayWithCapacity:[theSuggestions count]];
     for (UVSuggestion *suggestion in theSuggestions) {
-        [ids addObject:[NSNumber numberWithInt:suggestion.suggestionId]];
+        [ids addObject:[NSNumber numberWithInteger:suggestion.suggestionId]];
     }
     [UVBabayaga track:SEARCH_IDEAS searchText:_searchController.searchBar.text ids:ids];
     [_searchController.searchResultsTableView reloadData];
@@ -135,7 +135,7 @@
 }
 
 - (void)initCellForLoad:(UITableViewCell *)cell indexPath:(NSIndexPath *)indexPath {
-    cell.backgroundView = [[UIView alloc] initWithFrame:cell.frame];
+    cell.backgroundColor = [UIColor whiteColor];
     UILabel *label = [[UILabel alloc] initWithFrame:cell.frame];
     label.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     label.backgroundColor = [UIColor clearColor];
@@ -156,8 +156,12 @@
     UILabel *status = (UILabel *)[cell.contentView viewWithTag:STATUS];
     UIView *statusColor = [cell.contentView viewWithTag:STATUS_COLOR];
     title.text = suggestion.title;
-    subs.text = [NSString stringWithFormat:@"%d", (int)suggestion.subscriberCount];
-    [statusColor.layer.sublayers.lastObject setBackgroundColor:suggestion.statusColor.CGColor];
+    if ([UVSession currentSession].clientConfig.displaySuggestionsByRank) {
+        subs.text = suggestion.rankString;
+    } else {
+        subs.text = [NSString stringWithFormat:@"%d", (int)suggestion.subscriberCount];
+    }
+    [(CALayer *)statusColor.layer.sublayers.lastObject setBackgroundColor:suggestion.statusColor.CGColor];
     status.textColor = suggestion.statusColor;
     status.text = [suggestion.status uppercaseString];
 }
@@ -214,6 +218,10 @@
 
 - (void)showSuggestion:(UVSuggestion *)suggestion {
     UVSuggestionDetailsViewController *next = [[UVSuggestionDetailsViewController alloc] initWithSuggestion:suggestion];
+    if (IOS7 && IPAD && _searchController.active) {
+        // this is a workaround. formsheet + uisearchcontroller is horribly buggy on iOS 7
+        _searchController.active = NO;
+    }
     [self.navigationController pushViewController:next animated:YES];
 }
 
@@ -230,7 +238,9 @@
         } else if (indexPath.row < _forum.suggestions.count) {
             [self showSuggestion:[_forum.suggestions objectAtIndex:indexPath.row]];
         } else {
-            [self retrieveMoreSuggestions];
+            if (!_loading) {
+                [self retrieveMoreSuggestions];
+            }
         }
     } else {
         [self showSuggestion:[_searchResults objectAtIndex:indexPath.row]];
