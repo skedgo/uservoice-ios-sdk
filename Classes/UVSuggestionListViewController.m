@@ -163,7 +163,7 @@
 
 - (void)composeButtonTapped {
     UVPostIdeaViewController *next = [UVPostIdeaViewController new];
-    next.initialText = _searchController.searchBar.text;
+    next.initialTitle = _searchController.searchBar.text;
     next.delegate = self;
     [self presentModalViewController:next];
 }
