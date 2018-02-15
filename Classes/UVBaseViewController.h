@@ -70,6 +70,10 @@
 - (void)keyboardDidShow:(NSNotification*)notification;
 - (void)keyboardDidHide:(NSNotification*)notification;
 
+// Setup cell for suggestions view
+- (void)initCellForSuggestion:(UITableViewCell *)cell indexPath:(NSIndexPath *)indexPath;
+- (void)customizeCellForSuggestion:(UVSuggestion *)suggestion cell:(UITableViewCell *)cell;
+
 // Returns a cell for the specified identifier. Either reuses an existing cell,
 // or creates a new cell if necessary. Uses reflection to delegate cell initialization
 // and customization to identifier specific methods. This allows us to remove the
@@ -82,6 +86,7 @@
 
 - (void)alertError:(NSString *)message;
 - (void)setupGroupedTableView;
+- (void)setupPlainTableView;
 - (UIScrollView *)scrollView;
 
 - (CGFloat)heightForDynamicRowWithReuseIdentifier:(NSString *)reuseIdentifier indexPath:(NSIndexPath *)indexPath;
@@ -89,8 +94,5 @@
 - (void)configureView:(UIView *)superview subviews:(NSDictionary *)viewsDict constraints:(NSArray *)constraintStrings finalCondition:(BOOL)includeFinalConstraint finalConstraint:(NSString *)finalConstraint;
 - (UITextField *)configureView:(UIView *)view label:(NSString *)labelText placeholder:(NSString *)placeholderText;
 - (UIView *)poweredByView;
-
-- (void)correctSearchDisplayFrames:(UISearchDisplayController *)controller;
-- (void)correctFramesForSearchDisplayControllerBeginSearch:(BOOL)beginSearch searchDisplayController:(UISearchDisplayController *)controller;
 
 @end

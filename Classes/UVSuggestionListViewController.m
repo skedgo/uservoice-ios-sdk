@@ -18,6 +18,7 @@
 #import "UVUtils.h"
 #import "UVBabayaga.h"
 #import "UVPostIdeaViewController.h"
+#import "UVSuggestionSearchResultsController.h"
 
 #define SUGGESTIONS_PAGE_SIZE 10
 #define UV_SEARCH_TEXTBAR 1
@@ -29,11 +30,12 @@
 #define UV_SEARCH_TOOLBAR 1000
 #define UV_SEARCH_TOOLBAR_LABEL 1001
 
-#define TITLE 20
-#define SUBSCRIBER_COUNT 21
-#define STATUS 22
-#define STATUS_COLOR 23
 #define LOADING 30
+
+@interface UVSuggestionListViewController()
+@property (nonatomic, retain) UISearchController *searchController;
+@property (nonatomic, retain) UVSuggestionSearchResultsController *searchResultsController;
+@end
 
 @implementation UVSuggestionListViewController {
     UITableViewCell *_templateCell;
@@ -74,7 +76,12 @@
         [ids addObject:[NSNumber numberWithInteger:suggestion.suggestionId]];
     }
     [UVBabayaga track:SEARCH_IDEAS searchText:_searchController.searchBar.text ids:ids];
-    [_searchController.searchResultsTableView reloadData];
+    
+    if (_searchController.active && ![_searchController.searchBar.text isEqualToString:@""]) {
+        [self updateSearchResultsForSearchController:_searchController];
+    } else {
+        [_tableView reloadData];
+    }
 }
 
 #pragma mark ===== UITableViewDataSource Methods =====
@@ -87,51 +94,8 @@
     }
 }
 
-- (void)initCellForSuggestion:(UITableViewCell *)cell indexPath:(NSIndexPath *)indexPath {
-    cell.backgroundColor = [UIColor whiteColor];
-    cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
-    UIImageView *heart = [UVUtils imageViewWithImageNamed:@"uv_heart.png"];
-    UILabel *subs = [UILabel new];
-    subs.font = [UIFont systemFontOfSize:14];
-    subs.textColor = [UIColor grayColor];
-    subs.tag = SUBSCRIBER_COUNT;
-    UILabel *title = [UILabel new];
-    title.numberOfLines = 0;
-    title.tag = TITLE;
-    title.font = [UIFont systemFontOfSize:17];
-    UILabel *status = [UILabel new];
-    status.font = [UIFont systemFontOfSize:11];
-    status.tag = STATUS;
-    UIView *statusColor = [UIView new];
-    statusColor.tag = STATUS_COLOR;
-    CALayer *layer = [CALayer layer];
-    layer.frame = CGRectMake(0, 0, 9, 9);
-    [statusColor.layer addSublayer:layer];
-    NSArray *constraints = @[
-        @"|-[title]-|",
-        @"|-[heart(==9)]-3-[subs]-10-[statusColor(==9)]-5-[status]",
-        @"V:|-12-[title]-6-[heart(==9)]",
-        @"V:[title]-6-[statusColor(==9)]",
-        @"V:[title]-4-[status]",
-        @"V:[title]-2-[subs]"
-    ];
-    [self configureView:cell.contentView
-               subviews:NSDictionaryOfVariableBindings(subs, title, heart, statusColor, status)
-            constraints:constraints
-         finalCondition:indexPath == nil
-        finalConstraint:@"V:[heart]-14-|"];
-}
-
 - (void)customizeCellForSuggestion:(UITableViewCell *)cell indexPath:(NSIndexPath *)indexPath {
     [self customizeCellForSuggestion:[_forum.suggestions objectAtIndex:indexPath.row] cell:cell];
-}
-
-- (void)initCellForResult:(UITableViewCell *)cell indexPath:(NSIndexPath *)indexPath {
-    [self initCellForSuggestion:cell indexPath:indexPath];
-}
-
-- (void)customizeCellForResult:(UITableViewCell *)cell indexPath:(NSIndexPath *)indexPath {
-    [self customizeCellForSuggestion:[_searchResults objectAtIndex:indexPath.row] cell:cell];
 }
 
 - (void)initCellForLoad:(UITableViewCell *)cell indexPath:(NSIndexPath *)indexPath {
@@ -150,29 +114,9 @@
     label.text = _loading ? NSLocalizedStringFromTableInBundle(@"Loading...", @"UserVoice", [UserVoice bundle], nil) : NSLocalizedStringFromTableInBundle(@"Load more", @"UserVoice", [UserVoice bundle], nil);
 }
 
-- (void)customizeCellForSuggestion:(UVSuggestion *)suggestion cell:(UITableViewCell *)cell {
-    UILabel *title = (UILabel *)[cell.contentView viewWithTag:TITLE];
-    UILabel *subs = (UILabel *)[cell.contentView viewWithTag:SUBSCRIBER_COUNT];
-    UILabel *status = (UILabel *)[cell.contentView viewWithTag:STATUS];
-    UIView *statusColor = [cell.contentView viewWithTag:STATUS_COLOR];
-    title.text = suggestion.title;
-    if ([UVSession currentSession].clientConfig.displaySuggestionsByRank) {
-        subs.text = suggestion.rankString;
-    } else {
-        subs.text = [NSString stringWithFormat:@"%d", (int)suggestion.subscriberCount];
-    }
-    [(CALayer *)statusColor.layer.sublayers.lastObject setBackgroundColor:suggestion.statusColor.CGColor];
-    status.textColor = suggestion.statusColor;
-    status.text = [suggestion.status uppercaseString];
-}
-
 - (UITableViewCell *)tableView:(UITableView *)theTableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSString *identifier;
-    if (theTableView == _tableView) {
-        identifier = (indexPath.section == 0 && [UVSession currentSession].config.showPostIdea) ? @"Add" : (indexPath.row < _forum.suggestions.count) ? @"Suggestion" : @"Load";
-    } else {
-        identifier = @"Result";
-    }
+    NSString *identifier = (indexPath.section == 0 && [UVSession currentSession].config.showPostIdea) ? @"Add" : (indexPath.row < _forum.suggestions.count) ? @"Suggestion" : @"Load";
+
     return [self createCellForIdentifier:identifier
                                tableView:theTableView
                                indexPath:indexPath
@@ -183,10 +127,8 @@
 - (NSInteger)tableView:(UITableView *)theTableView numberOfRowsInSection:(NSInteger)section {
     if (section == 0 && [UVSession currentSession].config.showPostIdea && theTableView == _tableView) {
         return 1;
-    } else if (theTableView == _tableView) {
-        return _forum.suggestions.count + (_forum.suggestions.count < _forum.suggestionsCount || _loading ? 1 : 0);
     } else {
-        return _searchResults.count;
+        return _forum.suggestions.count + (_forum.suggestions.count < _forum.suggestionsCount || _loading ? 1 : 0);
     }
 }
 
@@ -201,16 +143,14 @@
         return 44;
     } else if (theTableView == _tableView && indexPath.row < _forum.suggestions.count) {
         return [self heightForDynamicRowWithReuseIdentifier:@"Suggestion" indexPath:indexPath];
-    } else if (theTableView != _tableView) {
-        return [self heightForDynamicRowWithReuseIdentifier:@"Result" indexPath:indexPath];
     } else {
         return 44;
     }
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
-    if ((section == 0 && [UVSession currentSession].config.showPostIdea) || tableView != _tableView) {
-        return nil;
+    if (section == 0 && [UVSession currentSession].config.showPostIdea) {
+            return nil;
     } else {
         return _forum.prompt;
     }
@@ -218,76 +158,52 @@
 
 - (void)showSuggestion:(UVSuggestion *)suggestion {
     UVSuggestionDetailsViewController *next = [[UVSuggestionDetailsViewController alloc] initWithSuggestion:suggestion];
-    if (IOS7 && IPAD && _searchController.active) {
-        // this is a workaround. formsheet + uisearchcontroller is horribly buggy on iOS 7
-        _searchController.active = NO;
-    }
     [self.navigationController pushViewController:next animated:YES];
 }
 
 - (void)composeButtonTapped {
     UVPostIdeaViewController *next = [UVPostIdeaViewController new];
-    next.initialTitle = _searchController.searchBar.text;
+    next.initialText = _searchController.searchBar.text;
+    next.delegate = self;
     [self presentModalViewController:next];
 }
 
 - (void)tableView:(UITableView *)theTableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (theTableView == _tableView) {
-        if (indexPath.section == 0 && [UVSession currentSession].config.showPostIdea) {
-            [self composeButtonTapped];
-        } else if (indexPath.row < _forum.suggestions.count) {
-            [self showSuggestion:[_forum.suggestions objectAtIndex:indexPath.row]];
-        } else {
-            if (!_loading) {
-                [self retrieveMoreSuggestions];
-            }
-        }
+    if (indexPath.section == 0 && [UVSession currentSession].config.showPostIdea) {
+        [self composeButtonTapped];
+    } else if (indexPath.row < _forum.suggestions.count) {
+        [self showSuggestion:[_forum.suggestions objectAtIndex:indexPath.row]];
     } else {
-        [self showSuggestion:[_searchResults objectAtIndex:indexPath.row]];
+        if (!_loading) {
+            [self retrieveMoreSuggestions];
+        }
     }
+
     [theTableView deselectRowAtIndexPath:indexPath animated:YES];
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
-    return tableView == _tableView ? 30 : 0;
+    return 30;
 }
 
 #pragma mark ===== UISearchBarDelegate Methods =====
 
-- (BOOL)searchBarShouldBeginEditing:(UISearchBar *)searchBar {
-    [_searchController setActive:YES animated:YES];
-    [searchBar setShowsCancelButton:YES animated:YES];
-    return YES;
+- (void)searchBarCancelButtonClicked:(UISearchBar *)searchBar {
+    _searchController.searchBar.text = @"";
+    _searchResults = [NSArray array];
+    [_tableView reloadData];
 }
 
-- (void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText {
-    [UVSuggestion searchWithForum:_forum query:searchBar.text delegate:self];
-}
+#pragma mark ==== UISearchResultsUpdating Methods ====
 
-#pragma mark ===== UISearchDisplayControllerDelegate Methods =====
-
-- (void)searchDisplayControllerWillEndSearch:(UISearchDisplayController *)controller {
-    controller.searchBar.showsScopeBar = NO;
-    if (IOS7 && IPAD) {
-        [self correctFramesForSearchDisplayControllerBeginSearch:NO searchDisplayController:_searchController];
-    }
-}
-
-- (void)searchDisplayControllerWillBeginSearch:(UISearchDisplayController *)controller {
-    if (IOS7 && IPAD) {
-        [self correctFramesForSearchDisplayControllerBeginSearch:YES searchDisplayController:_searchController];
-    }
-}
-
-- (void)searchDisplayControllerDidBeginSearch:(UISearchDisplayController *)controller {
-    if (IOS7 && IPAD) {
-        [self correctSearchDisplayFrames:_searchController];
-    }
-}
-
-- (void)searchDisplayController:(UISearchDisplayController *)controller didShowSearchResultsTableView:(UITableView *)tableView {
-    if (IOS7 && IPAD) {
-        controller.searchResultsTableView.contentInset = UIEdgeInsetsMake(self.searchController.searchBar.frame.size.height, 0.f, 0.f, 0.f);
+- (void)updateSearchResultsForSearchController:(UISearchController *)searchController {
+    [UVSuggestion searchWithForum:_forum query:searchController.searchBar.text delegate:self];
+    
+    if (_searchController.searchResultsController) {
+        UVSuggestionSearchResultsController *searchResultsTVC = (UVSuggestionSearchResultsController *)_searchController.searchResultsController;
+        searchResultsTVC.searchResults = self.searchResults;
+        searchResultsTVC.tableView.backgroundView = [searchResultsTVC displayNoResults];
+        [searchResultsTVC.tableView reloadData];
     }
 }
 
@@ -298,15 +214,21 @@
     [UVBabayaga track:VIEW_FORUM id:_forum.forumId];
     [self setupGroupedTableView];
 
-    UISearchBar *searchBar = [[UISearchBar alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 44)];
-    searchBar.placeholder = NSLocalizedStringFromTableInBundle(@"Search forum", @"UserVoice", [UserVoice bundle], nil);
-    searchBar.delegate = self;
-
-    _searchController = [[UISearchDisplayController alloc] initWithSearchBar:searchBar contentsController:self];
-    _searchController.delegate = self;
-    _searchController.searchResultsDataSource = self;
-    _searchController.searchResultsDelegate = self;
-    _tableView.tableHeaderView = searchBar;
+    self.definesPresentationContext = true;
+    self.searchResultsController = [[UVSuggestionSearchResultsController alloc] init];
+    _searchController = [[UISearchController alloc] initWithSearchResultsController:self.searchResultsController];
+    _searchController.searchResultsUpdater = self;
+    _searchController.searchBar.delegate = self;
+    _searchController.searchBar.placeholder = NSLocalizedStringFromTableInBundle(@"Search forum", @"UserVoice", [UserVoice bundle], nil);
+    if (FORMSHEET) {
+        _searchController.hidesNavigationBarDuringPresentation = false;
+    }
+    
+    if (@available(iOS 11.0, *)) {
+        self.navigationItem.searchController = _searchController;
+    } else {
+        _tableView.tableHeaderView = _searchController.searchBar;
+    }
 
     if (![UVSession currentSession].clientConfig.whiteLabel) {
         _tableView.tableFooterView = self.poweredByView;
@@ -323,6 +245,11 @@
                                                                                  style:UIBarButtonItemStylePlain
                                                                                 target:self
                                                                                 action:@selector(dismiss)];
+    }
+    
+    if (_forum && !_forum.suggestions.count) {
+        [self populateSuggestions];
+        [_tableView reloadData];
     }
 }
 
@@ -346,18 +273,20 @@
     }
 }
 
-- (void)viewWillAppear:(BOOL)animated {
-    [super viewWillAppear:animated];
-
-    if (_forum && !_forum.suggestions.count) {
-        [self populateSuggestions];
-    }
+- (void)ideaWasCreated:(UVSuggestion *)suggestion {
+    _forum.suggestions = nil;
+    [self populateSuggestions];
     [_tableView reloadData];
 }
 
 - (void)dealloc {
-    self.tableView.delegate = nil;
-    self.tableView.dataSource = nil;
+    _searchResults = nil;
+    if (_searchController) {
+        _searchController.searchResultsUpdater = nil;
+    }
+    if (self.searchResultsController) {
+        self.searchResultsController = nil;
+    }
 }
 
 @end

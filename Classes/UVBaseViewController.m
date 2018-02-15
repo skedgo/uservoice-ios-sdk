@@ -18,6 +18,12 @@
 #import "UVSigninManager.h"
 #import "UVKeyboardUtils.h"
 #import "UVUtils.h"
+#import "UVTruncatingLabel.h"
+
+#define TITLE 20
+#define SUBSCRIBER_COUNT 21
+#define STATUS 22
+#define STATUS_COLOR 23
 
 @implementation UVBaseViewController
 
@@ -53,7 +59,7 @@
     barFrame = self.navigationController.navigationBar.frame;
     CGRect appFrame = [UIScreen mainScreen].applicationFrame;
     CGFloat yStart = barFrame.origin.y + barFrame.size.height;
-    
+
     return CGRectMake(0, yStart, appFrame.size.width, appFrame.size.height - barFrame.size.height);
 }
 
@@ -88,7 +94,7 @@
     if (!self.navigationItem) {
         return;
     }
-    
+
     if (self.navigationItem.rightBarButtonItem) {
         self.navigationItem.rightBarButtonItem.enabled = enabled;
     }
@@ -198,12 +204,12 @@
     // We are the top modal, make to sure that parent modals use our size
     if (self.needNestedModalHack && self.presentedViewController == nil && self.presentingViewController) {
         for (UIViewController* parent = self.presentingViewController;
-             parent.presentingViewController;
+             [parent isKindOfClass:UVBaseViewController.class] && parent.presentingViewController;
              parent = parent.presentingViewController) {
             parent.view.superview.frame = parent.presentedViewController.view.superview.frame;
         }
     }
-    
+
     [super willAnimateRotationToInterfaceOrientation:toInterfaceOrientation duration:duration];
 }
 
@@ -212,7 +218,7 @@
     // We are the top modal, make to sure that parent modals are hidden during transition
     if (self.needNestedModalHack && self.presentedViewController == nil && self.presentingViewController) {
         for (UIViewController* parent = self.presentingViewController;
-             parent.presentingViewController;
+             [parent isKindOfClass:UVBaseViewController.class] && parent.presentingViewController;
              parent = parent.presentingViewController) {
             parent.view.superview.hidden = YES;
         }
@@ -225,12 +231,12 @@
     // We are the top modal, make to sure that parent modals are shown after animation
     if (self.needNestedModalHack && self.presentedViewController == nil && self.presentingViewController) {
         for (UIViewController* parent = self.presentingViewController;
-             parent.presentingViewController;
+            [parent isKindOfClass:UVBaseViewController.class] && parent.presentingViewController;
              parent = parent.presentingViewController) {
             parent.view.superview.hidden = NO;
         }
     }
-    
+
     if (!IOS7 && _tableView) {
         [_tableView reloadData];
     }
@@ -239,6 +245,57 @@
 }
 
 #pragma mark ===== helper methods for table views =====
+
+- (void)initCellForSuggestion:(UITableViewCell *)cell indexPath:(NSIndexPath *)indexPath {
+    cell.backgroundColor = [UIColor whiteColor];
+    cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+    UIImageView *heart = [UVUtils imageViewWithImageNamed:@"uv_heart.png"];
+    UILabel *subs = [UILabel new];
+    subs.font = [UIFont systemFontOfSize:14];
+    subs.textColor = [UIColor grayColor];
+    subs.tag = SUBSCRIBER_COUNT;
+    UILabel *title = [UILabel new];
+    title.numberOfLines = 0;
+    title.tag = TITLE;
+    title.font = [UIFont systemFontOfSize:17];
+    UILabel *status = [UILabel new];
+    status.font = [UIFont systemFontOfSize:11];
+    status.tag = STATUS;
+    UIView *statusColor = [UIView new];
+    statusColor.tag = STATUS_COLOR;
+    CALayer *layer = [CALayer layer];
+    layer.frame = CGRectMake(0, 0, 9, 9);
+    [statusColor.layer addSublayer:layer];
+    NSArray *constraints = @[
+                             @"|-16-[title]-|",
+                             @"|-16-[heart(==9)]-3-[subs]-10-[statusColor(==9)]-5-[status]",
+                             @"V:|-12-[title]-6-[heart(==9)]",
+                             @"V:[title]-6-[statusColor(==9)]",
+                             @"V:[title]-4-[status]",
+                             @"V:[title]-2-[subs]"
+                             ];
+    [self configureView:cell.contentView
+               subviews:NSDictionaryOfVariableBindings(subs, title, heart, statusColor, status)
+            constraints:constraints
+         finalCondition:indexPath == nil
+        finalConstraint:@"V:[heart]-14-|"];
+}
+
+- (void)customizeCellForSuggestion:(UVSuggestion *)suggestion cell:(UITableViewCell *)cell {
+    UILabel *title = (UILabel *)[cell.contentView viewWithTag:TITLE];
+    UILabel *subs = (UILabel *)[cell.contentView viewWithTag:SUBSCRIBER_COUNT];
+    UILabel *status = (UILabel *)[cell.contentView viewWithTag:STATUS];
+    UIView *statusColor = [cell.contentView viewWithTag:STATUS_COLOR];
+    title.text = suggestion.title;
+    if ([UVSession currentSession].clientConfig.displaySuggestionsByRank) {
+        subs.text = suggestion.rankString;
+    } else {
+        subs.text = [NSString stringWithFormat:@"%d", (int)suggestion.subscriberCount];
+    }
+    [(CALayer *)statusColor.layer.sublayers.lastObject setBackgroundColor:suggestion.statusColor.CGColor];
+    status.textColor = suggestion.statusColor;
+    status.text = [suggestion.status uppercaseString];
+}
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
@@ -273,6 +330,9 @@
                     [label setPreferredMaxLayoutWidth:label.frame.size.width];
                 }
                 [label setBackgroundColor:[UIColor clearColor]];
+            } else if ([view isKindOfClass:[UVTruncatingLabel class]]) {
+                UVTruncatingLabel *label = (UVTruncatingLabel *)view;
+                [label setPreferredMaxLayoutWidth:label.frame.size.width];
             }
         }
     }
@@ -294,7 +354,7 @@
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(keyboardWillHide:)
                                                  name:UIKeyboardWillHideNotification object:nil];
-    
+
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(keyboardDidHide:)
                                                  name:UIKeyboardDidHideNotification object:nil];
@@ -311,7 +371,7 @@
         }
     } else {
         NSDictionary* info = [notification userInfo];
-        CGRect rect = [[info objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue];
+        CGRect rect = [[info objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
         // Convert from window space to view space to account for orientation
         _kbHeight = (NSInteger)[self.view convertRect:rect fromView:nil].size.height;
     }
@@ -340,13 +400,22 @@
     UINavigationController *navigationController = [UINavigationController new];
     [UVUtils applyStylesheetToNavigationController:navigationController];
     navigationController.viewControllers = @[viewController];
-    if (IPAD)
+    if (FORMSHEET)
         navigationController.modalPresentationStyle = UIModalPresentationFormSheet;
     [self presentViewController:navigationController animated:YES completion:nil];
 }
 
 - (void)setupGroupedTableView {
     _tableView = [[UITableView alloc] initWithFrame:[self contentFrame] style:UITableViewStyleGrouped];
+    [self tableViewSetup];
+}
+
+- (void)setupPlainTableView {
+    _tableView = [[UITableView alloc] initWithFrame:[self contentFrame] style:UITableViewStylePlain];
+    [self tableViewSetup];
+}
+
+- (void)tableViewSetup {
     _tableView.delegate = (id<UITableViewDelegate>)self;
     _tableView.dataSource = (id<UITableViewDataSource>)self;
     if ([UVStyleSheet instance].tableViewBackgroundColor) {
@@ -358,6 +427,8 @@
         _tableView.backgroundColor = [UVStyleSheet instance].tableViewBackgroundColor;
     }
     self.view = _tableView;
+    // Remove empty table cells from the bottom of the table view
+    _tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
 }
 
 - (void)setView:(UIView *)view {
@@ -428,7 +499,7 @@
     if ([self respondsToSelector:customizeCellSelector]) {
         [self performSelector:customizeCellSelector withObject:cell withObject:indexPath];
     }
-    cell.contentView.frame = CGRectMake(0, 0, [self cellWidthForStyle:_tableView.style accessoryType:cell.accessoryType], 0);
+    cell.contentView.frame = CGRectMake(0, 0, [self cellWidthForStyle:_tableView.style accessoryType:cell.accessoryType], 10000);
     [cell.contentView setNeedsLayout];
     [cell.contentView layoutIfNeeded];
 
@@ -450,9 +521,26 @@
 
 - (CGFloat)cellWidthForStyle:(UITableViewStyle)style accessoryType:(UITableViewCellAccessoryType)accessoryType {
     CGFloat width = self.view.frame.size.width;
+    if (@available(iOS 11.0, *)) {
+        width -= self.view.safeAreaInsets.left + self.view.safeAreaInsets.right;
+    }
     CGFloat accessoryWidth = 0;
     CGFloat margin = 0;
-    if (IOS7) {
+    if (IOS8) {
+        if (IPAD || IPHONE_PLUS) {
+            if (accessoryType == UITableViewCellAccessoryDisclosureIndicator) {
+                accessoryWidth = 38;
+            } else if (accessoryType == UITableViewCellAccessoryCheckmark) {
+                accessoryWidth = 44;
+            }
+        } else {
+            if (accessoryType == UITableViewCellAccessoryDisclosureIndicator) {
+                accessoryWidth = 34;
+            } else if (accessoryType == UITableViewCellAccessoryCheckmark) {
+                accessoryWidth = 40;
+            }
+        }
+    } else if (IOS7) {
         if (accessoryType == UITableViewCellAccessoryDisclosureIndicator) {
             accessoryWidth = 33;
         } else if (accessoryType == UITableViewCellAccessoryCheckmark) {
@@ -502,42 +590,6 @@
     return [UVStyleSheet instance].preferredStatusBarStyle;
 }
 
-#pragma mark ===== iPad search bar hack =====
-
-- (void)correctSearchDisplayFrames:(UISearchDisplayController *)controller {
-    CGRect superviewFrame = controller.searchBar.superview.frame;
-    superviewFrame.origin.y = 0.f;
-    controller.searchBar.superview.frame = superviewFrame;
-
-    UIView *dimmingView = nil;
-    NSMutableArray *views = [NSMutableArray array];
-    [views addObject:self.view];
-    while (dimmingView == nil && views.count > 0) {
-        UIView *subview = [views firstObject];
-        if ([NSStringFromClass(subview.class) hasSuffix:@"DimmingView"]) {
-            dimmingView = subview;
-        } else {
-            [views addObjectsFromArray:subview.subviews];
-        }
-        [views removeObjectAtIndex:0];
-    }
-    [views removeAllObjects];
-    if (dimmingView) {
-        CGRect dimmingFrame = dimmingView.superview.frame;
-        dimmingFrame.origin.y = controller.searchBar.frame.size.height;
-        dimmingFrame.size.height = self.view.frame.size.height - dimmingFrame.origin.y;
-        dimmingView.superview.frame = dimmingFrame;
-    }
-}
-
-- (void)correctFramesForSearchDisplayControllerBeginSearch:(BOOL)beginSearch searchDisplayController:(UISearchDisplayController *)controller {
-    [self.navigationController setNavigationBarHidden:beginSearch animated:YES];
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self correctSearchDisplayFrames:controller];
-        [self->_tableView setContentOffset:CGPointMake(0, -44) animated:YES];
-    });
-}
-
 #pragma mark - UVSigninManagerDelegate
 
 - (void)signinManagerDidSignIn:(UVUser *)user {
@@ -558,9 +610,17 @@
 
 - (void) viewWillDisappear:(BOOL)animated {
     [self.tableView setContentOffset:self.tableView.contentOffset animated:NO];
+    [super viewWillDisappear:animated];
 }
 
 - (void)dealloc {
+    if (self.tableView) {
+        self.tableView.dataSource = nil;
+        self.tableView.delegate = nil;
+    }
+    if (_signinManager) {
+        _signinManager.delegate = nil;
+    }
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 

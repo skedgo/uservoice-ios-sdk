@@ -9,5 +9,8 @@ xcuserdata
 profile
 .idea
 *.swp
+Pods
 dist
-UserVoice.xccheckout
+Carthage/
+UserVoice\ Demo.xcodeproj
+UserVoice\ SDK.xcworkspace

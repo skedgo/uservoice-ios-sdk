@@ -47,7 +47,9 @@
     _fieldsView.textViewDelegate = self;
     [self configureView:view
                subviews:NSDictionaryOfVariableBindings(_fieldsView)
-            constraints:@[@"|[_fieldsView]|", @"V:|[_fieldsView]|"]];
+            constraints:@[@"V:|[_fieldsView]|"]];
+    [view addConstraint:[_fieldsView.leftAnchor constraintEqualToAnchor:view.readableContentGuide.leftAnchor]];
+    [view addConstraint:[_fieldsView.rightAnchor constraintEqualToAnchor:view.readableContentGuide.rightAnchor]];
 
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedStringFromTableInBundle(@"Cancel", @"UserVoice", [UserVoice bundle], nil)
                                                                              style:UIBarButtonItemStylePlain
@@ -66,6 +68,11 @@
 - (void)viewWillAppear:(BOOL)animated {
     [_fieldsView.textView becomeFirstResponder];
     [super viewWillAppear:animated];
+}
+
+- (void)dismiss {
+    _instantAnswerManager.delegate = nil;
+    [super dismiss];
 }
 
 - (void)textViewDidChange:(UVTextView *)theTextEditor {
@@ -166,6 +173,7 @@
     [self clearDraft];
     [UVBabayaga track:SUBMIT_TICKET];
     UVSuccessViewController *next = [UVSuccessViewController new];
+    next.firstController = self.firstController;
     next.titleText = NSLocalizedStringFromTableInBundle(@"Message sent!", @"UserVoice", [UserVoice bundle], nil);
     next.text = NSLocalizedStringFromTableInBundle(@"We'll be in touch.", @"UserVoice", [UserVoice bundle], nil);
     [self.navigationController setViewControllers:@[next] animated:YES];
@@ -232,5 +240,15 @@
         [self showSaveActionSheet];
     }
 }
+
+- (void)dealloc {
+    if (_instantAnswerManager) {
+        _instantAnswerManager.delegate = nil;
+    }
+    if (_detailsController) {
+        _detailsController.delegate = nil;
+    }
+}
+
 
 @end

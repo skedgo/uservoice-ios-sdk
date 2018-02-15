@@ -19,21 +19,21 @@
 
 + (id)getArticlesWithTopicId:(NSInteger)topicId page:(NSInteger)page delegate:(id<UVModelDelegate>)delegate {
     NSString *path = [self apiPath:[NSString stringWithFormat:@"/topics/%d/articles.json", (int)topicId]];
-    NSDictionary *params = @{ @"sort" : @"ordered", @"page" : [NSString stringWithFormat:@"%d", (int)page] };
+    NSDictionary *params = @{ @"sort" : @"ordered", @"page" : [NSString stringWithFormat:@"%d", (int)page], @"filter" : @"published" };
     return [self getPath:path
               withParams:params
                   target:delegate
-                selector:@selector(didRetrieveArticles:)
+                selector:@selector(didRetrieveArticles:pagination:)
                  rootKey:@"articles"];
 }
 
 + (id)getArticlesWithPage:(NSInteger)page delegate:(id<UVModelDelegate>)delegate {
     NSString *path = [self apiPath:@"/articles.json"];
-    NSDictionary *params = @{ @"sort" : @"ordered", @"page" : [NSString stringWithFormat:@"%d", (int)page] };
+    NSDictionary *params = @{ @"sort" : @"ordered", @"page" : [NSString stringWithFormat:@"%d", (int)page], @"filter" : @"published" };
     return [self getPath:path
               withParams:params
                   target:delegate
-                selector:@selector(didRetrieveArticles:)
+                selector:@selector(didRetrieveArticles:pagination:)
                  rootKey:@"articles"];
 }
 

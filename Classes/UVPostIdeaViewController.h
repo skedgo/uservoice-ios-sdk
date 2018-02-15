@@ -11,6 +11,12 @@
 #import "UVCallback.h"
 
 @class UVTextView;
+@class UVSuggestion;
+
+@protocol UVPostIdeaDelegate <NSObject>
+@optional
+- (void)ideaWasCreated:(UVSuggestion *)suggestion;
+@end
 
 @interface UVPostIdeaViewController : UVBaseViewController<UVInstantAnswersDelegate, UITextViewDelegate> {
     UVCallback *_didAuthenticateCallback;
@@ -25,5 +31,6 @@
 @property (nonatomic, retain) NSLayoutConstraint *topConstraint;
 @property (nonatomic, retain) NSLayoutConstraint *descConstraint;
 @property (nonatomic, retain) UILabel *desc;
+@property (nonatomic, assign) id<UVPostIdeaDelegate> delegate;
 
 @end

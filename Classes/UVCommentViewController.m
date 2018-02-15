@@ -88,7 +88,7 @@
     _suggestion.commentsCount = comment.updatedCommentCount;
     UINavigationController *navController = (UINavigationController *)self.presentingViewController;
     UVSuggestionDetailsViewController *previous = (UVSuggestionDetailsViewController *)[navController.viewControllers lastObject];
-    [previous reloadComments];
+    [previous commentCreated:comment];
     [self dismiss];
 }
 
@@ -116,7 +116,9 @@
 
     [self configureView:view
                subviews:NSDictionaryOfVariableBindings(_fieldsView)
-            constraints:@[@"|[_fieldsView]|", @"V:|[_fieldsView]|"]];
+            constraints:@[@"V:|[_fieldsView]|"]];
+    [view addConstraint:[_fieldsView.leftAnchor constraintEqualToAnchor:view.readableContentGuide.leftAnchor]];
+    [view addConstraint:[_fieldsView.rightAnchor constraintEqualToAnchor:view.readableContentGuide.rightAnchor]];
 
     self.view = view;
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedStringFromTableInBundle(@"Cancel", @"UserVoice", [UserVoice bundle], nil)
@@ -141,6 +143,9 @@
 }
 
 - (void)dealloc {
+    if (_fieldsView) {
+        _fieldsView.textViewDelegate = nil;
+    }
     [_signInCallback invalidate];
 }
 

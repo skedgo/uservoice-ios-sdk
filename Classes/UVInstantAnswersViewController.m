@@ -49,7 +49,9 @@
 
 - (void)tableView:(UITableView *)theTableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Back" style:UIBarButtonItemStylePlain target:nil action:nil];
-    id model = [[self resultsForSection:indexPath.section] objectAtIndex:indexPath.row];
+    NSArray *results = [self resultsForSection:indexPath.section];
+    if (indexPath.row >= results.count) return;
+    id model = [results objectAtIndex:indexPath.row];
     [_instantAnswerManager pushViewFor:model parent:self];
     [theTableView deselectRowAtIndexPath:indexPath animated:YES];
 }
@@ -92,7 +94,7 @@
 }
 
 - (BOOL)sectionIsArticles:(NSInteger)section {
-    return (_articlesFirst && _instantAnswerManager.articles.count > 0) ? section == 0 : section == 1;
+    return (_articlesFirst && _instantAnswerManager.articles.count > 0) || _instantAnswerManager.ideas.count == 0 ? section == 0 : section == 1;
 }
 
 @end

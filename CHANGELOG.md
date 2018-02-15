@@ -1,5 +1,84 @@
 ## master ##
 
+## 3.2.11 (2017-11-17)
+* Various fixes for iPhone X
+
+## 3.2.11 (2017-10-03)
+* Fix a build issue
+
+## 3.2.10 (2017-06-30)
+* Fix a bug when submitting a suggestion with a category in non-English locales
+
+## 3.2.9 (2016-09-07)
+* Fix a crash caused by receiving a 429 rate limit response
+
+## 3.2.8 (2016-07-08)
+
+* Implement OAuth clock sync
+* Update Xcode settings
+* Update some translations
+* Fix warnings
+* Add carthage support
+
+## 3.2.7 (2016-03-21)
+
+* Fix a crash caused by a null page number in an api response
+
+## 3.2.6 (2016-03-21)
+
+* Fix the issues surrounding recently added security to articles API endpoint
+
+## 3.2.5 (2016-03-10)
+
+* Add pagination support on portal view
+
+## 3.2.4 (2016-03-08)
+
+* Fix a bug where the userVoiceWasDismissed callback was not always called
+* Bump the maximum number of topics to display on the portal from 10 to 100
+* Fix a bug where admins would see unpublished articles in the sdk
+* Update nl localization
+* Fix a bug where presentation on the iPad could potentially mess with the frame of the host controller
+* Fix a bug where status display was broken if there was no specified color for that status
+* Open links within articles in Safari
+* Update jp localization
+* Fix a bug where html entities were shown in forum prompt
+* Display images and articles to fit display width
+* Update zh-Hant localization
+* Fix bundle path for iOS 8.1
+
+## 3.2.3 (2015-01-30) ##
+
+* Fix a bug where launching the contact form from an article would fail
+* Fix a bug related to suggestion list on iPad after posting an idea
+* Clear all delegates on dealloc to prevent crashes
+* Hide the "more" label if there is no description text
+
+## 3.2.2 (2015-01-06) ##
+
+* Fix implementation of navigationBarTextShadowColor
+* Set default navigationBarTintColor from UIAppearance
+* Fix implementation of navigationBarBackgroundColor
+* Fill in missing translations
+* Show post idea in portal view if forum is disabled but post idea is not
+* Fix a bug where instant answer results were blank
+* Fix implementation of preferredStatusBarStyle
+* Fix incorrect casing of an import statement, which would prevent building on a case-sensitive file system
+
+## 3.2.1 (2014-09-30) ##
+
+* Fix issue where comments would not appear in the comments list after being posted
+* Fix crash related to instant answer results that are displayed by rank
+* Fix a rotation-related visual artifact that some people experienced on sdk launch
+* Unescape html entities in forum names
+* Fix missing "more" text on iOS 8
+
+## 3.2.0 (2014-09-03) ##
+
+* iOS 8 fixes
+* Simplified behavior of search boxes when inside a form sheet
+* Updated Chinese translation
+
 ## 3.1.2 (2014-08-01) ##
 
 * Updated Portuguese translation
