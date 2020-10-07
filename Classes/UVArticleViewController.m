@@ -7,6 +7,8 @@
 //
 
 #import <QuartzCore/QuartzCore.h>
+#import <WebKit/WebKit.h>
+
 #import "UVArticleViewController.h"
 #import "UVSession.h"
 #import "UVContactViewController.h"
@@ -28,8 +30,8 @@
     self.navigationItem.title = @"";
 
     CGFloat footerHeight = 46;
-    _webView = [UIWebView new];
-    _webView.delegate = self;
+    _webView = [WKWebView new];
+    _webView.navigationDelegate = self;
     NSString *section = _article.topicName ? [NSString stringWithFormat:@"%@ / %@", NSLocalizedStringFromTableInBundle(@"Knowledge Base", @"UserVoice", [UserVoice bundle], nil), _article.topicName] : NSLocalizedStringFromTableInBundle(@"Knowledge base", @"UserVoice", [UserVoice bundle], nil);
     NSString *linkColor;
     if (IOS7) {
@@ -88,12 +90,12 @@
     [self.view bringSubviewToFront:bg];
 }
 
-
-- (BOOL)webView:(UIWebView *)view shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType {
-    if (navigationType == UIWebViewNavigationTypeLinkClicked) {
-        return ![[UIApplication sharedApplication] openURL:request.URL];
-    }
-    return YES;
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
+  if (navigationAction.navigationType == WKNavigationTypeLinkActivated && ![[UIApplication sharedApplication] openURL:navigationAction.request.URL]) {
+    decisionHandler(WKNavigationActionPolicyCancel);
+  } else {
+    decisionHandler(WKNavigationActionPolicyAllow);
+  }
 }
 
 - (void)actionSheet:(UIActionSheet *)actionSheet didDismissWithButtonIndex:(NSInteger)buttonIndex {
